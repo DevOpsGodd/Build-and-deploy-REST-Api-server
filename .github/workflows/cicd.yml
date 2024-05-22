@@ -32,7 +32,7 @@ jobs:
     - name: Run tests
       run: |
         . venv/bin/activate
-        pytest
+        pytest tests/
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
