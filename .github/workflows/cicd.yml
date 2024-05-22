@@ -24,6 +24,11 @@ jobs:
         . venv/bin/activate
         pip install -r requirements.txt
 
+    - name: Upgrade Flask
+      run: |
+        source venv/bin/activate
+        pip install --upgrade flask    
+
     - name: Run tests
       run: |
         . venv/bin/activate
