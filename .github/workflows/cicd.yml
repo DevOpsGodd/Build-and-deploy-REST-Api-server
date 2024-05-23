@@ -50,3 +50,14 @@ jobs:
         context: .
         push: true
         tags: uthycloud/task-api:latest
+
+    - name: Kubectl Actions
+      uses: tale/kubectl-action@v1
+      with: 
+        base64-kube-config: ${{ secrets.KUBE_CONFIG }}
+    - run: |
+        kubectl apply -f deployment.yaml
+        kubectl apply -f svc.yaml
+        kubectl apply -f updated_ingress.yaml
+
+

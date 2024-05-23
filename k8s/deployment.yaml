@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: task-api
-        image: task-api:latest
+        image: uthycloud/task-api:latest
         ports:
         - containerPort: 5000
 
