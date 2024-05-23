@@ -56,8 +56,8 @@ jobs:
       with: 
         base64-kube-config: ${{ secrets.KUBE_CONFIG }}
     - run: |
-        kubectl apply -f deployment.yaml
-        kubectl apply -f svc.yaml
-        kubectl apply -f updated_ingress.yaml
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/svc.yaml
+        kubectl apply -f k8s/updated_ingress.yaml
 
 
