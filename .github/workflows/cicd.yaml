@@ -79,13 +79,11 @@ jobs:
     - name: Install Prometheus
       run: |
         helm install prometheus prometheus-community/prometheus
-        kubectl expose service prometheus-server --type=NodePort --target-port=9090 
---name=prometheus-server-ext
+        kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext
 
     - name: Install Grafana
       run: |
         helm install grafana grafana/grafana
-        kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 
---decode ; echo
+        kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
         kubectl expose service grafana --type=NodePort --target-port=3000 --name=grafana-ext
 
