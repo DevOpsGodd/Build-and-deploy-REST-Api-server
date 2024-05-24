@@ -56,9 +56,12 @@ jobs:
       with:
         version: 'latest'
         
-    - name: Setup Kubeconfig
-      run: |
-        echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+    - name: Create .kube directory
+      run: mkdir -p $HOME/.kube
+
+    - name: Set up kubeconfig
+      run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > $HOME/.kube/config
+
 
     - name: Deploy to Kubernetes
       run: |
