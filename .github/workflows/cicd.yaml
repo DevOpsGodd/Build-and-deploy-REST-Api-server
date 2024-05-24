@@ -51,8 +51,8 @@ jobs:
         push: true
         tags: uthycloud/task-api:latest
 
-    - name: Set up Kubernetes
-      uses: azure/setup-kubectl@v2
+    - name: Set up kubectl
+      uses: azure/k8s-actions/setup-kubectl@v1
       with:
         version: 'latest'
         
