@@ -68,7 +68,7 @@ jobs:
     - name: Deploy to Kubernetes
       run: |
         kubectl apply --validate=false -f k8s/deployment.yaml
-        kubectl apply --validate=false -f k8s/service.yaml
+        kubectl apply --validate=false -f k8s/svc.yaml
 
     - name: Set up Helm
       uses: azure/setup-helm@v1
