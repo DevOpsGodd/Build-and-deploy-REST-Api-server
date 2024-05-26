@@ -75,20 +75,11 @@ jobs:
       with:
         version: v3.6.3
 
-    - name: Add Helm repos
+    - name: Add Helm repo
       run: |
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-        helm repo add grafana https://grafana.github.io/helm-charts
         helm repo update
 
-    - name: Install Prometheus
+    - name: Install Kube Prometheus Stack
       run: |
-        helm install prometheus prometheus-community/prometheus
-        kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext
-
-    - name: Install Grafana
-      run: |
-        helm install grafana grafana/grafana
-        kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-        kubectl expose service grafana --type=NodePort --target-port=3000 --name=grafana-ext
-
+        helm install prometheus prometheus-community/kube-prometheus-stack
