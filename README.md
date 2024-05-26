@@ -53,21 +53,26 @@ The CI/CD pipeline is automated using GitHub Actions.
 
 The application is containerized using Docker. The Dockerfile is located in the `root` directory of the project.
 
-```Dockerfile
+```
 # Dockerfile
-FROM python:3.8-slim
+FROM python:3.9-slim
+
 WORKDIR /app
-COPY . .
+
+COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-CMD ["python", "src/main.py"]
+
+COPY app.py app.py
+
+CMD ["python", "app.py"]
 ```
 
 ## Kubernetes Deployment
 
 The Kubernetes deployment files are located in the k8s directory.
 
-`deployment.yaml:` Defines the Deployment for the task API.
-`service.yaml:` Defines the Service to expose the Deployment using a LoadBalancer.
+- `deployment.yaml:` Defines the Deployment for the task API.
+- `svc.yaml:` Defines the Service to expose the Deployment using a LoadBalancer.
 
 
 ## Deploying to Kubernetes
@@ -76,12 +81,12 @@ Apply the deployment and service files:
 
 ```
 kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/svc.yaml
 ```
 
 ## CI/CD Pipeline
 
-The CI/CD pipeline is automated using GitHub Actions. The workflow file is located in '.github/workflows/deploy.yml.'
+The CI/CD pipeline is automated using GitHub Actions. The workflow file is located in `.github/workflows/deploy.yml.`
 
 **Key Steps in the Pipeline:**
 
@@ -90,15 +95,102 @@ The CI/CD pipeline is automated using GitHub Actions. The workflow file is locat
 - Deploy the application to Kubernetes
 - Deploy the Kube Prometheus Stack for monitoring
 
+```
+name: Uthman CI/CD Pipeline
 
-![Post Deployment Snapshot](images/post deployment.png)
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        . venv/bin/activate
+        pip install -r requirements.txt
+        pip install pytest
+
+    - name: Upgrade Flask
+      run: |
+        source venv/bin/activate
+        pip install --upgrade flask    
+
+    - name: Run tests
+      run: |
+        . venv/bin/activate
+        pytest
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: uthycloud/task-api:latest
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+        
+    - name: Create .kube directory
+      run: mkdir -p $HOME/.kube
+
+    - name: Set up kubeconfig
+      run: echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $HOME/.kube/config
+
+    - name: Verify kubeconfig
+      run: kubectl config view
+    
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply --validate=false -f k8s/deployment.yaml
+        kubectl apply --validate=false -f k8s/svc.yaml
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v1
+      with:
+        version: v3.6.3
+
+    - name: Add Helm repo
+      run: |
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo update
+
+    - name: Install Kube Prometheus Stack
+      run: |
+        helm install prometheus prometheus-community/kube-prometheus-stack
+```
+
+![Post Deployment Snapshot](images/post%20deployment.png)
 
 
-Here are the pods and services running in my cluster
+Here are the pods and services running in my cluster, the application and monitoring stack inclusive.
 
-![Pods and Services Overview](images/pods & services.png)
+![Pods and Services Overview](images/pods%20&%20services.png)
 
-And here is our deployment with 3 replicas
+And here is our deployment with our application `task-api-deployment` running on 3 replicas. 
 
 ![Deployment Diagram](images/deployment.png)
 
@@ -140,13 +232,13 @@ kubectl port-forward service/prometheus-grafana 3000:80
 step.
 
 
-This is our prometheus successfully queried
+This is my prometheus successfully queried
 
-![Prometheus Queried Metrics](images/prometheus queried.png)
+![Prometheus Queried Metrics](images/prometheus%20queried.png)
 
 This is my Grafana Dashboard
 
-![Grafana Dashboard](images/grafana dashboard.png)
+![Grafana Dashboard](images/grafana%20dashboard.png)
 
 ## Usage
 
@@ -157,11 +249,12 @@ interact with the API.
 
 Example:
 
-# Create a new task
+### Create a new task
 
+```
 curl -X POST http://<load-balancer-ip>/tasks -d '{"title": "New Task", "description": "Task description"}' -H 
 "Content-Type: application/json"
-
+```
 ![Task CLI](images/taskcli.png)
 
 ## Conclusion
